@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query, Path
+from fastapi import APIRouter, HTTPException, Depends, Query, Path, Response
 from sqlalchemy.orm import Session
 from ..schemas import AskRequest, AskResponse, HistoryItem, UpdateMessageRequest
 from ..services.ai_client import AIClient, AIRateLimitError, AIUpstreamError
@@ -54,3 +54,9 @@ def update_message(
     if not row:
         raise HTTPException(status_code=404, detail="not_found")
     return HistoryItem(id=row.id, role=row.role, text=row.text, ts=row.ts)
+
+@router.delete("/history", status_code=204)
+def clear_history(db: Session = Depends(get_db)):
+    """履歴を全消去（グローバル）。認証なしのため開発用途のみ想定。"""
+    repo.delete_all_messages(db)
+    return Response(status_code=204)

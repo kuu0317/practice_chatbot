@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { askChat, fetchHistory, updateMessage, type HistoryItem } from "./api";
+import { askChat, fetchHistory, updateMessage, deleteHistory, type HistoryItem } from "./api";
 
 const POLL_MS = 5000; // 自動更新間隔（ミリ秒）
 
@@ -112,7 +112,21 @@ export default function App() {
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && onSend()}
         />
         <button onClick={onSend} disabled={!input || loading}>送信</button>
-        {/* 手動の「更新」ボタンは削除しました */}
+        <button
+          onClick={async () => {
+            if (!confirm("履歴をすべて削除します。よろしいですか？")) return;
+            try {
+              await deleteHistory();
+              // 即時に最新化（空になる想定）
+              await safeLoadHistory();
+            } catch (e:any) {
+              setErr(e.message || "reset failed");
+            }
+          }}
+          disabled={loading}
+        >
+          リセット
+        </button>
       </div>
 
       {loading && <p>待機中…</p>}
