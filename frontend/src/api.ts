@@ -41,3 +41,16 @@ export async function deleteHistory(): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/history`, { method: "DELETE" });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
+
+export async function editAndRegenerate(id:number, text:string) {
+  const r = await fetch(`${API_BASE}/api/chat/message/${id}/edit_regen`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    throw new Error(e?.detail || `HTTP ${r.status}`);
+  }
+  return r.json() as Promise<{ updated: HistoryItem; assistant: HistoryItem }>;
+}

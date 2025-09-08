@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { askChat, fetchHistory, updateMessage, deleteHistory, type HistoryItem } from "./api";
+import { askChat, fetchHistory, editAndRegenerate, type HistoryItem } from "./api";
 
 const POLL_MS = 5000; // 自動更新間隔（ミリ秒）
 
@@ -89,15 +89,15 @@ export default function App() {
   async function onSaveEdit() {
     if (!editId) return;
     try {
-      await updateMessage(editId, editText);
+      await editAndRegenerate(editId, editText); // ← 変更点
       setEditId(null);
       setEditText("");
-      await safeLoadHistory();
-    } catch (e: any) {
-      setErr(e.message || "update failed");
+      await safeLoadHistory(); // 自動ポーリングもあるが即時反映
+    } catch (e:any) {
+      setErr(e.message || "update/regenerate failed");
     }
   }
-
+  
   return (
     <div style={{ maxWidth: 800, margin: "24px auto", fontFamily: "system-ui" }}>
       <div ref={topRef} />
@@ -141,17 +141,22 @@ export default function App() {
             display: "flex", gap: 8, alignItems: "center"
           }}>
             <strong style={{ width: 80 }}>{m.role === "assistant" ? "AI" : "You"}</strong>
-            {editId === m.id ? (
-              <>
-                <input value={editText} onChange={e=>setEditText(e.target.value)} style={{ flex: 1, padding: 6 }}/>
-                <button onClick={onSaveEdit}>保存</button>
-                <button onClick={()=>{setEditId(null); setEditText("");}}>取消</button>
-              </>
-            ) : (
-              <>
-                <span style={{ whiteSpace: "pre-wrap", flex: 1 }}>{m.text}</span>
-                <button onClick={() => onStartEdit(m)} title="このメッセージを更新">編集</button>
-              </>
+            {m.role === "user" && (
+              editId === m.id ? (
+                <>
+                  <input value={editText} onChange={e=>setEditText(e.target.value)} style={{ flex: 1, padding: 6 }}/>
+                  <button onClick={onSaveEdit}>保存</button>
+                  <button onClick={()=>{setEditId(null); setEditText("");}}>取消</button>
+                </>
+              ) : (
+                <>
+                  <span style={{ whiteSpace: "pre-wrap", flex: 1 }}>{m.text}</span>
+                  <button onClick={() => onStartEdit(m)} title="このメッセージを更新">編集</button>
+                </>
+              )
+            )}
+            {m.role === "assistant" && (
+              <span style={{ whiteSpace: "pre-wrap", flex: 1 }}>{m.text}</span>
             )}
           </div>
         ))}

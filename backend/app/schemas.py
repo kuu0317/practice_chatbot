@@ -19,3 +19,7 @@ class HistoryItem(BaseModel):
 
 class UpdateMessageRequest(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
+
+class EditRegenResponse(BaseModel):
+    updated: HistoryItem
+    assistant: HistoryItem
