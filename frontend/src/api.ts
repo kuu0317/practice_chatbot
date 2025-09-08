@@ -1,8 +1,10 @@
+// API通信関連の関数群
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
 export type HistoryItem = { id:number; role:"user"|"assistant"; text:string; ts:string };
 export type AskResponse = { reply:string; tokens_input?:number; tokens_output?:number };
 
+// チャットAPIにメッセージを送信し応答を取得
 export async function askChat(message: string, system?: string): Promise<AskResponse> {
   const res = await fetch(`${API_BASE}/api/chat/ask`, {
     method: "POST",
@@ -18,12 +20,14 @@ export async function askChat(message: string, system?: string): Promise<AskResp
   return res.json();
 }
 
+// チャット履歴を取得
 export async function fetchHistory(limit=20): Promise<HistoryItem[]> {
   const r = await fetch(`${API_BASE}/api/chat/history?limit=${limit}`);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
 
+// メッセージ内容を更新
 export async function updateMessage(id:number, text:string): Promise<HistoryItem> {
   const r = await fetch(`${API_BASE}/api/chat/message/${id}`, {
     method: "PUT",
@@ -37,11 +41,13 @@ export async function updateMessage(id:number, text:string): Promise<HistoryItem
   return r.json();
 }
 
+// チャット履歴を全削除
 export async function deleteHistory(): Promise<void> {
   const r = await fetch(`${API_BASE}/api/chat/history`, { method: "DELETE" });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
 
+// メッセージ編集＆AI応答再生成
 export async function editAndRegenerate(id:number, text:string) {
   const r = await fetch(`${API_BASE}/api/chat/message/${id}/edit_regen`, {
     method: "POST",

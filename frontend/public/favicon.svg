@@ -1,3 +1,4 @@
+<!-- サイト用ファビコンSVG -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="12" fill="#0ea5e9"></rect>
   <text x="50%" y="55%" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="34" fill="white">CB</text>

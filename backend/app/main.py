@@ -1,3 +1,5 @@
+
+# バックエンドAPIサーバーのエントリーポイント
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import chat
@@ -10,12 +12,14 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 
+# サーバー起動時にDB初期化
 @app.on_event("startup")
 def _startup():
     init_db_with_retry()
 
 app.include_router(chat.router, prefix="/api/chat")
 
+# ヘルスチェック用エンドポイント
 @app.get("/health")
 def health():
     return {"ok": True}

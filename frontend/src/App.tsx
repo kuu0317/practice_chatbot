@@ -1,7 +1,8 @@
+// チャット画面のルートコンポーネント
 import { useEffect, useMemo, useRef, useState } from "react";
 import { askChat, fetchHistory, editAndRegenerate, type HistoryItem } from "./api";
 
-const POLL_MS = 5000; // 自動更新間隔（ミリ秒）
+const POLL_MS = 5000;
 
 export default function App() {
   const [input, setInput] = useState("");
@@ -11,19 +12,19 @@ export default function App() {
   const [editId, setEditId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
 
-  // 最新→古い順で上から表示
+  // 履歴を新しい順で表示
   const display = useMemo(() => [...history].reverse(), [history]);
   const topRef = useRef<HTMLDivElement>(null);
-
-  // 重複ポーリング防止
   const inFlightRef = useRef(false);
   const pollTimerRef = useRef<number | null>(null);
 
+  // 履歴を取得
   async function loadHistory() {
     const h = await fetchHistory(30);
     setHistory(h);
   }
 
+  // 履歴取得（重複防止）
   async function safeLoadHistory() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
@@ -36,11 +37,9 @@ export default function App() {
     }
   }
 
+  // 初回取得・ポーリング管理
   useEffect(() => {
-    // 初回取得
     safeLoadHistory();
-
-    // ポーリング開始/停止
     const start = () => {
       if (pollTimerRef.current != null) return;
       pollTimerRef.current = window.setInterval(safeLoadHistory, POLL_MS);
@@ -51,19 +50,16 @@ export default function App() {
         pollTimerRef.current = null;
       }
     };
-
     start();
-
-    // タブ非表示時は停止、復帰で再開（節約）
     const onVis = () => (document.hidden ? stop() : start());
     document.addEventListener("visibilitychange", onVis);
-
     return () => {
       stop();
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
+  // メッセージ送信
   async function onSend() {
     const msg = input.trim();
     if (!msg) return;
@@ -72,7 +68,7 @@ export default function App() {
     try {
       await askChat(msg);
       setInput("");
-      await safeLoadHistory(); // 送信直後も最新化
+      await safeLoadHistory();
     } catch (e: any) {
       setErr(e.message || "failed");
     } finally {
@@ -81,18 +77,20 @@ export default function App() {
     }
   }
 
+  // 編集開始
   async function onStartEdit(item: HistoryItem) {
     setEditId(item.id);
     setEditText(item.text);
   }
 
+  // 編集保存＆再生成
   async function onSaveEdit() {
     if (!editId) return;
     try {
-      await editAndRegenerate(editId, editText); // ← 変更点
+      await editAndRegenerate(editId, editText);
       setEditId(null);
       setEditText("");
-      await safeLoadHistory(); // 自動ポーリングもあるが即時反映
+      await safeLoadHistory();
     } catch (e:any) {
       setErr(e.message || "update/regenerate failed");
     }
@@ -117,7 +115,7 @@ export default function App() {
             if (!confirm("履歴をすべて削除します。よろしいですか？")) return;
             try {
               await deleteHistory();
-              // 即時に最新化（空になる想定）
+              await safeLoadHistory();
               await safeLoadHistory();
             } catch (e:any) {
               setErr(e.message || "reset failed");

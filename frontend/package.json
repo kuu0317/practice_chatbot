@@ -1,3 +1,4 @@
+// フロントエンドWebアプリケーションのパッケージ定義
 {
   "name": "cb-codecheck-fe",
   "private": true,

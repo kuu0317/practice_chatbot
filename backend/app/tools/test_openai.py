@@ -1,10 +1,8 @@
-"""
-使い方:
-docker compose run --rm backend python -m app.tools.test_openai "こんにちは"
-"""
+# OpenAI APIの疎通テスト用スクリプト
 import sys, asyncio
 from ..services.ai_client import AIClient
 
+# メッセージを送信しAI応答を表示
 async def main():
     msg = "Hello from test script" if len(sys.argv) < 2 else " ".join(sys.argv[1:])
     client = AIClient()

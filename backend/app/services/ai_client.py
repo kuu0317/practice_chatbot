@@ -1,15 +1,20 @@
+# OpenAI APIを利用したAIクライアント
 import asyncio, httpx
 from typing import Tuple, Optional, List, Dict
 from ..config import OPENAI_API_KEY, AI_MODEL
 
+# レートリミット時の例外
 class AIRateLimitError(Exception): ...
+# 上流APIエラー時の例外
 class AIUpstreamError(Exception): ...
 
+# OpenAI APIクライアント
 class AIClient:
     def __init__(self, api_key: Optional[str] = OPENAI_API_KEY, model: Optional[str] = AI_MODEL):
         self.api_key = api_key
         self.model = model or "gpt-4o-mini"
 
+    # ユーザー入力・履歴からAI応答を生成
     async def generate_reply(
         self,
         message: str,

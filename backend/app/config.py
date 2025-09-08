@@ -1,5 +1,6 @@
 import os
 
+# 環境変数から設定値を取得
 def _bool(v: str | None) -> bool:
     return str(v or "").lower() in ("1","true","yes","on")
 
