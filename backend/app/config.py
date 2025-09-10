@@ -9,8 +9,8 @@ AI_MODEL = os.getenv("AI_MODEL", "gpt-4o-mini")
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://chat:chatpass@db:5432/chat")
 
-OPENAI_DRYRUN = os.getenv("OPENAI_DRYRUN", "0") == "1"
-ENABLE_DB = _bool(os.getenv("ENABLE_DB", "true"))
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "").strip()
+MAX_TOKENS_OUTPUT = int(os.getenv("MAX_TOKENS_OUTPUT", "256") or 256)
 
 USE_CONTEXT = _bool(os.getenv("USE_CONTEXT", "true"))
 MAX_HISTORY = int(os.getenv("MAX_HISTORY", "10") or 10)

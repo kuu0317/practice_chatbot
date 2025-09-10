@@ -8,7 +8,7 @@ from ..schemas import (
 from ..services.ai_client import AIClient, AIRateLimitError, AIUpstreamError
 from ..db import get_db
 from ..repositories import history as repo
-from ..config import USE_CONTEXT, MAX_HISTORY
+from ..config import USE_CONTEXT, MAX_HISTORY, SYSTEM_PROMPT
 
 router = APIRouter()
 MAX_LEN = 200
@@ -16,6 +16,7 @@ MAX_LEN = 200
 # ユーザーからの質問を受け付け、AI応答を返す
 @router.post("/ask", response_model=AskResponse)
 async def ask(req: AskRequest, db: Session = Depends(get_db)):
+    sys_prompt = (req.system or SYSTEM_PROMPT or "").strip()
     if len(req.message) > MAX_LEN:
         raise HTTPException(status_code=400, detail="message_too_long")
     u = repo.create_message(db, role="user", text=req.message)
@@ -27,7 +28,9 @@ async def ask(req: AskRequest, db: Session = Depends(get_db)):
     client = AIClient()
     try:
         reply, tok_in, tok_out = await client.generate_reply(
-            message=req.message, system=req.system, history=history_items
+            message=req.message, 
+            system=sys_prompt if sys_prompt else None, 
+            history=history_items
         )
         a = repo.create_message(db, role="assistant", text=reply)
         return AskResponse(reply=reply, tokens_input=tok_in, tokens_output=tok_out)
