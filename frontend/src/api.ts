@@ -43,6 +43,7 @@ export async function updateMessage(id:number, text:string): Promise<HistoryItem
 
 // チャット履歴を全削除
 export async function deleteHistory(): Promise<void> {
+  console.debug("[api] deleteHistory called");
   const r = await fetch(`${API_BASE}/api/chat/history`, { method: "DELETE" });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }

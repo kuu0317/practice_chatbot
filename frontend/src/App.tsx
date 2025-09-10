@@ -1,6 +1,6 @@
 // チャット画面のルートコンポーネント
 import { useEffect, useMemo, useRef, useState } from "react";
-import { askChat, fetchHistory, editAndRegenerate, type HistoryItem } from "./api";
+import { askChat, fetchHistory, editAndRegenerate, deleteHistory, type HistoryItem } from "./api";
 
 const POLL_MS = 5000;
 
@@ -77,6 +77,7 @@ export default function App() {
       setErr(e.message || "failed");
     } finally {
       setLoading(false);
+      sendingRef.current = false;
       topRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }
