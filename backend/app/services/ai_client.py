@@ -1,7 +1,7 @@
 # OpenAI APIを利用したAIクライアント
 import asyncio, httpx
 from typing import Tuple, Optional, List, Dict
-from ..config import OPENAI_API_KEY, AI_MODEL
+from ..config import OPENAI_API_KEY, AI_MODEL, OPENAI_DRYRUN
 
 # レートリミット時の例外
 class AIRateLimitError(Exception): ...
@@ -21,6 +21,9 @@ class AIClient:
         system: Optional[str],
         history: Optional[List[Dict[str, str]]] = None,
     ) -> Tuple[str, int, int]:
+        if OPENAI_DRYRUN:
+            return "[DRYRUN応答] こんにちは！", 0, 0
+
         if not self.api_key:
             raise AIUpstreamError("OPENAI_API_KEY missing")
 
