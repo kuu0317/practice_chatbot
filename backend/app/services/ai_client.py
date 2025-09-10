@@ -1,7 +1,7 @@
 # OpenAI APIを利用したAIクライアント
 import asyncio, httpx
 from typing import Tuple, Optional, List, Dict
-from ..config import OPENAI_API_KEY, AI_MODEL
+from ..config import OPENAI_API_KEY, AI_MODEL, MAX_TOKENS_OUTPUT
 
 # レートリミット時の例外
 class AIRateLimitError(Exception): ...
@@ -33,7 +33,12 @@ class AIClient:
         msgs.append({"role": "user", "content": message})
 
         headers = {"Authorization": f"Bearer {self.api_key}"}
-        payload = {"model": self.model, "messages": msgs}
+        payload = {
+            "model": self.model, 
+            "messages": msgs,
+            "max_tokens": MAX_TOKENS_OUTPUT,
+            "temperature": 0.3,
+            }
 
         for attempt in range(3):
             try:

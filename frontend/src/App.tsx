@@ -11,6 +11,8 @@ export default function App() {
   const [err, setErr] = useState<string | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+  const composingRef = useRef(false); // 文字入力変換中フラグ
+  const sendingRef = useRef(false); // 送信中フラグ
 
   // 履歴を新しい順で表示
   const display = useMemo(() => [...history].reverse(), [history]);
@@ -63,6 +65,8 @@ export default function App() {
   async function onSend() {
     const msg = input.trim();
     if (!msg) return;
+    if (sendingRef.current) return;
+    sendingRef.current = true;
     setErr(null);
     setLoading(true);
     try {
@@ -102,12 +106,24 @@ export default function App() {
       <h1>CB Codecheck Chat</h1>
 
       <div style={{ display: "flex", gap: 8, position: "sticky", top: 0, background: "white", paddingBottom: 8 }}>
-        <input
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="メッセージを入力"
           style={{ flex: 1, padding: 8 }}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && onSend()}
+          onCompositionStart={() => { composingRef.current = true; }}
+          onCompositionEnd={() => { composingRef.current = false; }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              const ne = e.nativeEvent as any;
+              const composing = composingRef.current || ne?.isComposing || (e as any).keyCode === 229;
+              if (composing || e.repeat || sendingRef.current || loading) {
+                e.preventDefault();
+                return;
+              }
+              e.preventDefault();
+              onSend();
+          }}}
         />
         <button onClick={onSend} disabled={!input || loading}>送信</button>
         <button
