@@ -31,7 +31,12 @@ export default function App() {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     try {
-      await loadHistory();
+      const server = await fetchHistory(30);
+      setHistory(prev => {
+        const hasOptimistic = prev.some(m => m.id < 0);
+        if (server.length === 0 && hasOptimistic) return prev;
+        return server;
+      });
     } catch (e: any) {
       setErr((e && e.message) || "failed to fetch history");
     } finally {
@@ -69,11 +74,25 @@ export default function App() {
     sendingRef.current = true;
     setErr(null);
     setLoading(true);
+    const now = new Date().toISOString();
+    const tmpUserId = -Date.now(); // 一時的なID（負の値）
+    const tmpAiId = tmpUserId - 1;
+    setHistory(prev => [
+      ...prev,
+      { id: tmpUserId, role: "user", text: msg, ts: now },
+      { id: tmpAiId, role: "assistant", text: "（AIが応答中…）", ts: now }
+    ]);
     try {
-      await askChat(msg);
+      const res = await askChat(msg);
+      setHistory(prev => 
+        prev.map(h => (h.id === tmpAiId ? { ...h, text: res.reply } : h))
+      );
       setInput("");
       await safeLoadHistory();
     } catch (e: any) {
+      setHistory(prev =>
+        prev.map(h => (h.id === tmpAiId ? { ...h, text: "（エラーで応答できませんでした）" } : h))
+      );
       setErr(e.message || "failed");
     } finally {
       setLoading(false);

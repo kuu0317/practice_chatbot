@@ -1,7 +1,7 @@
 # OpenAI APIを利用したAIクライアント
 import asyncio, httpx
 from typing import Tuple, Optional, List, Dict
-from ..config import OPENAI_API_KEY, AI_MODEL, MAX_TOKENS_OUTPUT
+from ..config import OPENAI_API_KEY, AI_MODEL, MAX_TOKENS_OUTPUT, OPENAI_DRYRUN
 
 # レートリミット時の例外
 class AIRateLimitError(Exception): ...

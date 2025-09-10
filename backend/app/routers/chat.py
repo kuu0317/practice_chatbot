@@ -8,10 +8,14 @@ from ..schemas import (
 from ..services.ai_client import AIClient, AIRateLimitError, AIUpstreamError
 from ..db import get_db
 from ..repositories import history as repo
-from ..config import USE_CONTEXT, MAX_HISTORY, SYSTEM_PROMPT
+from ..config import USE_CONTEXT, MAX_HISTORY, SYSTEM_PROMPT, ENABLE_DB
 
 router = APIRouter()
 MAX_LEN = 200
+
+def require_db_enabled():
+    if not ENABLE_DB:
+        raise HTTPException(status_code=501, detail="database_disabled")
 
 # ユーザーからの質問を受け付け、AI応答を返す
 @router.post("/ask", response_model=AskResponse)
@@ -19,9 +23,10 @@ async def ask(req: AskRequest, db: Session = Depends(get_db)):
     sys_prompt = (req.system or SYSTEM_PROMPT or "").strip()
     if len(req.message) > MAX_LEN:
         raise HTTPException(status_code=400, detail="message_too_long")
-    u = repo.create_message(db, role="user", text=req.message)
+    if ENABLE_DB:
+        u = repo.create_message(db, role="user", text=req.message)
     history_items = []
-    if USE_CONTEXT:
+    if ENABLE_DB and USE_CONTEXT:
         rows = repo.list_messages(db, limit=MAX_HISTORY * 2)
         for r in rows[-MAX_HISTORY:]:
             history_items.append({"role": r.role, "text": r.text})
@@ -44,6 +49,8 @@ async def ask(req: AskRequest, db: Session = Depends(get_db)):
 # チャット履歴を取得
 @router.get("/history", response_model=list[HistoryItem])
 def history(limit: int = Query(20, ge=1, le=200), db: Session = Depends(get_db)):
+    if not ENABLE_DB:
+        return []
     rows = repo.list_messages(db, limit=limit)
     return [HistoryItem(id=r.id, role=r.role, text=r.text, ts=r.ts) for r in rows]
 
@@ -65,6 +72,8 @@ def update_message(
 # チャット履歴を全削除
 @router.delete("/history", status_code=204)
 def clear_history(db: Session = Depends(get_db)):
+    if not ENABLE_DB:
+        raise Response(status_code=204)
     repo.delete_all_messages(db)
     return Response(status_code=204)
 
