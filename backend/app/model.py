@@ -11,5 +11,9 @@ from .db import Base
 # 3. id, role, text, created_at などのカラムを適切な型・制約で定義してください。
 # 4. created_atは作成日時(datetime)でデフォルト値を設定します。
 # 5. インデックス(Index)も追加してみましょう。
+# チャットメッセージのDBモデル定義
+# TODO: 必要なカラムや制約を追加してください。
 class ChatMessage(Base):
-	pass
+	__tablename__ = "chat_messages"
+	id = mapped_column(Integer, primary_key=True, autoincrement=True)
+	# TODO: 他のカラム（role, text, created_atなど）を追加してください

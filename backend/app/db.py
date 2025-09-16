@@ -41,4 +41,4 @@ def init_db_with_retry(retries: int = 20, wait: float = 0.5):
     # 1. engine.connect() でDB接続できるまでリトライします。
     # 2. models.pyをimportし、Base.metadata.create_all(bind=engine)でテーブルを作成します。
     # 3. 例外処理・リトライも忘れずに。
-    raise NotImplementedError("DB初期化処理を実装してください")
+    pass  # TODO: DB初期化処理を実装してください
