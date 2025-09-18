@@ -42,14 +42,10 @@ export async function updateMessage(id:number, text:string): Promise<HistoryItem
 }
 
 // チャット履歴を全削除
-
-// TODO: チャット履歴を全削除するAPI呼び出しを実装してください。
-// --- ガイド ---
-// 1. fetchでDELETEリクエストを /api/chat/history に送信します。
-// 2. レスポンスが正常かどうかを判定し、エラー時は例外を投げてください。
-export async function deleteHistory(): Promise<number> {
-  // ここに実装
-  throw new Error("deleteHistoryを実装してください");
+export async function deleteHistory(): Promise<void> {
+  console.debug("[api] deleteHistory called");
+  const r = await fetch(`${API_BASE}/api/chat/history`, { method: "DELETE" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
 
 // メッセージ編集＆AI応答再生成
