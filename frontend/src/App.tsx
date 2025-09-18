@@ -148,13 +148,14 @@ export default function App() {
         <button onClick={onSend} disabled={!input || loading}>送信</button>
         <button
           onClick={async () => {
-            // TODO: リセットボタン押下時の履歴削除処理を実装してください。
-            // --- ガイド ---
-            // 1. confirmで本当に削除するか確認します。
-            // 2. deleteHistory()を呼び出して履歴を削除します。
-            // 3. safeLoadHistory()で最新状態を取得します。
-            // 4. エラー時はsetErrでエラーメッセージを表示します。
-            // 5. loading中はボタンを無効化してください。
+            if (!confirm("履歴をすべて削除します。よろしいですか？")) return;
+            try {
+              await deleteHistory();
+              await safeLoadHistory();
+              await safeLoadHistory();
+            } catch (e:any) {
+              setErr(e.message || "reset failed");
+            }
           }}
           disabled={loading}
         >

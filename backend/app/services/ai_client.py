@@ -24,10 +24,50 @@ class AIClient:
         if OPENAI_DRYRUN:
             return "[DRYRUN応答] こんにちは！", 0, 0
 
-        # TODO: OpenAI APIを呼び出してAIの応答を取得してください。
-        # --- ガイド ---
-    # 1. self.api_key, self.model, message, system, history を使ってAPIリクエスト用のデータを作成します。
-    # 2. httpx.AsyncClient などで https://api.openai.com/v1/chat/completions にPOSTリクエストを送ります。
-    # 3. レスポンスから reply, prompt_tokens, completion_tokens を取り出して return してください。
-    # 4. エラー時は例外を投げてください（例: raise AIUpstreamError("...")）
-    # 5. 公式ドキュメント: https://platform.openai.com/docs/api-reference/chat/create
+        if not self.api_key:
+            raise AIUpstreamError("OPENAI_API_KEY missing")
+
+        msgs: List[Dict[str,str]] = []
+        if system:
+            msgs.append({"role": "system", "content": system})
+        for h in (history or []):
+            if h.get("role") in ("user","assistant") and h.get("text"):
+                msgs.append({"role": h["role"], "content": h["text"]})
+        msgs.append({"role": "user", "content": message})
+
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        payload = {
+            "model": self.model, 
+            "messages": msgs,
+            "max_tokens": MAX_TOKENS_OUTPUT,
+            "temperature": 0.3,
+            }
+
+        for attempt in range(3):
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    r = await client.post(
+                        "https://api.openai.com/v1/chat/completions",
+                        headers=headers, json=payload
+                    )
+                if r.status_code == 429:
+                    if attempt < 2:
+                        await asyncio.sleep(0.5 * (2 ** attempt)); continue
+                    raise AIRateLimitError("rate limited")
+                if r.status_code >= 500:
+                    if attempt < 2:
+                        await asyncio.sleep(0.5 * (2 ** attempt)); continue
+                    raise AIUpstreamError("upstream error")
+                r.raise_for_status()
+                data = r.json()
+                reply = data["choices"][0]["message"]["content"]
+                usage = data.get("usage") or {}
+                return reply, int(usage.get("prompt_tokens", 0)), int(usage.get("completion_tokens", 0))
+            except httpx.TimeoutException as e:
+                if attempt < 2:
+                    await asyncio.sleep(0.5 * (2 ** attempt)); continue
+                raise AIUpstreamError("timeout") from e
+            except httpx.HTTPStatusError as e:
+                raise AIUpstreamError(str(e)) from e
+
+        raise AIUpstreamError("unexpected failure")
