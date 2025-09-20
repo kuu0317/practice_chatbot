@@ -155,6 +155,14 @@ export default function App() {
             // 3. safeLoadHistory()で最新状態を取得します。
             // 4. エラー時はsetErrでエラーメッセージを表示します。
             // 5. loading中はボタンを無効化してください。
+            if (!confirm("履歴をすべて削除します。よろしいですか？")) return;
+            try {
+              await deleteHistory();
+              await safeLoadHistory();
+              await safeLoadHistory();
+            } catch (e:any) {
+              setErr(e.message || "reset failed");
+            }
           }}
           disabled={loading}
         >

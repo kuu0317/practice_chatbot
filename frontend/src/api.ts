@@ -48,8 +48,9 @@ export async function updateMessage(id:number, text:string): Promise<HistoryItem
 // 1. fetchでDELETEリクエストを /api/chat/history に送信します。
 // 2. レスポンスが正常かどうかを判定し、エラー時は例外を投げてください。
 export async function deleteHistory(): Promise<number> {
-  // ここに実装
-  throw new Error("deleteHistoryを実装してください");
+  console.debug("[api] deleteHistory called");
+  const r = await fetch(`${API_BASE}/api/chat/history`, { method: "DELETE" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
 
 // メッセージ編集＆AI応答再生成
