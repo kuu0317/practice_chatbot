@@ -15,7 +15,7 @@ from .db import Base
 # TODO: 必要なカラムや制約を追加してください。
 class ChatMessage(Base):
 	__tablename__ = "chat_messages"
-	id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+	id = mapped_column(Integer, primary_key=True, autoincrement=True)
 	# TODO: 他のカラム（role, text, created_atなど）を追加してください
 	role: Mapped[str] = mapped_column(String(16))
 	text: Mapped[str] = mapped_column(String(4000))
